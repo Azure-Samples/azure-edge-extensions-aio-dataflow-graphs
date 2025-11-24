@@ -1,0 +1,44 @@
+apiVersion: connectivity.iotoperations.azure.com/v1
+kind: DataflowGraph
+metadata:
+  name: graph
+  namespace: azure-iot-operations
+spec:
+  requestDiskPersistence: Disabled
+  profileRef: default
+
+  nodes:
+    - nodeType: Source
+      name: temperature-source
+      sourceSettings:
+        endpointRef: default
+        dataSources:
+          - raw
+
+    - nodeType: Graph
+      name: temperature-processor
+      graphSettings:
+        registryEndpointRef: registry-endpoint-acr
+        artifact: graph-simple:1.0.0
+        configuration:
+        - key: temperature_lower_bound
+          value: "2000"
+        - key: temperature_upper_bound
+          value: "4000"
+
+    - nodeType: Destination
+      name: temperature-destination
+      destinationSettings:
+        endpointRef: default
+        dataDestination: processed
+
+  nodeConnections:
+    - from:
+        name: temperature-source
+      to:
+        name: temperature-processor
+
+    - from:
+        name: temperature-processor
+      to:
+        name: temperature-destination

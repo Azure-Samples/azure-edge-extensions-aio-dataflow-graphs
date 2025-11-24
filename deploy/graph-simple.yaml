@@ -1,0 +1,41 @@
+metadata:
+  $schema: "https://www.schemastore.org/aio-wasm-graph-config-1.0.0.json"
+  name: "Simple graph"
+  description: "A simple graph with a source, a filter module, and a sink"
+  version: "1.0.0"
+  vendor: "Microsoft"
+
+moduleRequirements:
+  apiVersion: "1.1.0"
+  runtimeVersion: "1.1.0"
+
+moduleConfigurations:
+  - name: module-temperature/filter
+    parameters:
+      temperature_lower_bound:
+        name: temperature_lower_bound
+        description: lower bound for temperature filtering
+      temperature_upper_bound:
+        name: temperature_upper_bound
+        description: upper bound for temperature filtering
+operations:
+  - operationType: "source"
+    name: "source"
+
+  - operationType: "filter"
+    name: "module-temperature/filter"
+    module: "filter:1.0.0"
+
+  - operationType: "sink"
+    name: "sink"
+
+connections:
+  - from:
+      name: "source"
+    to:
+      name: "module-temperature/filter"
+
+  - from:
+      name: "module-temperature/filter"
+    to:
+      name: "sink"
