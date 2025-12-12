@@ -198,7 +198,8 @@ while true; do
     -D CONNECT authentication-data $(cat /var/run/secrets/tokens/broker-sat)
 
   sleep 1
-done'```
+done'
+```
 
 ### Subscribe to Processed Messages
 

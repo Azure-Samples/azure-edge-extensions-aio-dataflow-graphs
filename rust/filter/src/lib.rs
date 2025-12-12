@@ -199,7 +199,7 @@ mod filter_temperature {
             key: "module".to_owned(),
             value: "module-temperature/filter".to_owned(),
         }];
-        logger::log(Level::Info, "module-temperature/filter", "labels defined");
+        let _ = metrics::add_to_counter("requests", CounterValue::U64(1), Some(&labels));
 
         // Extract payload from input to process
         let payload = match input {
