@@ -41,6 +41,9 @@ spec:
   nodeConnections:
     - from:
         name: temperature-source
+        schema:
+          schemaRef: aio-sr://__{schema_ref}__:1
+          serializationFormat: Json
       to:
         name: temperature-schema-validation
 

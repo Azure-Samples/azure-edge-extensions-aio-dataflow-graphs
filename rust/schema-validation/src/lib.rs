@@ -11,29 +11,6 @@ mod filter_operator {
 
     static SCHEMA: Lazy<Mutex<Option<JSONSchema<'static>>>> = Lazy::new(|| Mutex::new(None));
     
-    fn handle_validation_result<'a>(validation_result: Result<(), impl Iterator<Item = jsonschema::ValidationError<'a>>>) -> Result<bool, Error> {
-        match validation_result {
-            Ok(()) => {
-                logger::log(
-                    Level::Info,
-                    "schema-validation",
-                    "Payload is valid according to the schema",
-                );
-                Ok(true)
-            }
-            Err(errors) => {
-                for error in errors {
-                    logger::log(
-                        Level::Error,
-                        "schema-validation",
-                        &format!("Validation error: {error}"),
-                    );
-                }
-                Ok(false)
-            }
-        }
-    }
-
     // set up the schema provided by the developer
     fn filter_init(configuration: ModuleConfiguration) -> bool {
         logger::log(
@@ -102,7 +79,19 @@ mod filter_operator {
             schema: None,
         };
 
-        // Parse the payload first
+        // Check if the schema is already cached
+        let cached_schema = SCHEMA.lock().unwrap();
+        if cached_schema.is_none() {
+            logger::log(Level::Warn, "filter", "Schema not found");
+            return Ok(false);
+        }
+        logger::log(
+            Level::Info,
+            "filter",
+            &format!("cached_schema is: {cached_schema:?}"),
+        );
+        // Use the cached schema for validation
+        let compiled_schema = cached_schema.as_ref().unwrap();
         let payload = &result.payload.read();
         let payload_json: Value = match serde_json::from_slice(payload) {
             Ok(v) => v,
@@ -116,23 +105,29 @@ mod filter_operator {
             }
         };
 
-        // Check if the schema is already cached and validate
-        let cached_schema = SCHEMA.lock().unwrap();
-        if cached_schema.is_none() {
-            logger::log(Level::Warn, "filter", "Schema not found");
-            return Ok(false);
+        // Validate the payload against the schema
+        let validation_result = compiled_schema.validate(&payload_json);
+
+        match validation_result {
+            Ok(()) => {
+                logger::log(
+                    Level::Info,
+                    "schema-validation",
+                    "Payload is valid according to the schema",
+                );
+                Ok(true)
+            }
+            Err(errors) => {
+                for error in errors {
+                    logger::log(
+                        Level::Error,
+                        "schema-validation",
+                        &format!("Validation error: {error}"),
+                    );
+                }
+                Ok(false)
+            }
         }
-        logger::log(
-            Level::Info,
-            "filter",
-            &format!("cached_schema is: {cached_schema:?}"),
-        );
-        
-        // Use the cached schema for validation
-        let compiled_schema = cached_schema.as_ref().unwrap();
-        
-        // Validate and handle the result immediately while the guard is held
-        handle_validation_result(compiled_schema.validate(&payload_json))
     }
 
 }

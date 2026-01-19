@@ -3,6 +3,7 @@ PORTFORWARDING := -p '8883:8883@loadbalancer' -p '1883:1883@loadbalancer'
 ARCCLUSTERNAME := arck-wasm-valmet-007# arc-wasm-dataflows
 STORAGEACCOUNTNAME := sawasmdataflows
 SCHEMAREGISTRYNAME := sr-wasm-dataflows
+SCHEMANAME := temperatureSchema
 DEVICEREGISTRYNAME := adr-wasm-dataflows
 ACRNAME := acrwasmvalmet007# acr-wasm-dataflows
 RESOURCEGROUP := rg-wasm-valmet-007# rg-wasm-dataflows
@@ -46,11 +47,15 @@ push_wasm_module_to_acr:
 
 create_schema:
 	@echo "Creating JSON Schema in Schema Registry..."
-	az iot ops schema create -n temperatureSchema -g $(RESOURCEGROUP) --registry $(SCHEMAREGISTRYNAME) --format json --type message --version-content myschema.json
+	az iot ops schema create -n $(SCHEMANAME) -g $(RESOURCEGROUP) --registry $(SCHEMAREGISTRYNAME) --format json --type message --version-content myschema.json
 
 deploy_dataflow_graph:
 	@echo "Deploying Dataflow Graph..."
-	kubectl apply -f ./deploy/dataflow-graph.yaml
+	cp ./deploy/dataflow-graph-template.yaml ./deploy/dataflow-graph-temp.yaml
+	# on a mac (sed -i '' "s?__{schema_ref}__?$(SCHEMAREGISTRYNAME)/$(SCHEMANAME)?g" ./deploy/dataflow-graph-temp.yaml)
+	sed -i "s?__{schema_ref}__?$(SCHEMAREGISTRYNAME)/$(SCHEMANAME)?g" ./deploy/dataflow-graph-temp.yaml
+	kubectl apply -f ./deploy/dataflow-graph-temp.yaml
+	rm -f ./deploy/dataflow-graph-temp.yaml
 
 clean:
 	@echo "Cleaning up..."
