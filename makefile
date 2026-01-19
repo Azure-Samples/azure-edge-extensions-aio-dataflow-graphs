@@ -48,6 +48,10 @@ deploy_dataflow_graph:
 	@echo "Deploying Dataflow Graph..."
 	kubectl apply -f ./deploy/dataflow-graph.yaml
 
+create_schema:
+	@echo "Creating JSON Schema in Schema Registry..."
+	az iot ops schema create -n temperatureSchema -g $(RESOURCEGROUP) --registry $(SCHEMAREGISTRYNAME) --format json --type message --version-content myschema.json
+
 clean:
 	@echo "Cleaning up..."
 	k3d cluster delete $(K3DCLUSTERNAME)
