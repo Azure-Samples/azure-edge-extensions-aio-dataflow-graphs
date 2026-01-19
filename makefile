@@ -33,13 +33,16 @@ deploy_registry_endpoint:
 
 build_wasm_module:
 	@echo "Building WASM Module..."
-	cargo build --release --target wasm32-wasip2 --manifest-path ./rust/filter/Cargo.toml --config ./rust/filter/.cargo/config.toml
+	cargo build --release --target wasm32-wasip2 --manifest-path ./rust/filter/Cargo.toml --config ./rust/.cargo/config.toml
+	cargo build --release --target wasm32-wasip2 --manifest-path ./rust/schema-validation/Cargo.toml --config ./rust/.cargo/config.toml
 
 push_wasm_module_to_acr:
 	@echo "Pushing WASM Module to ACR..."
 	az acr login --name $(ACRNAME)
-	oras push $(ACRNAME).azurecr.io:/graph-simple:1.0.0 --config /dev/null:application/vnd.microsoft.aio.graph.v1+yaml ./deploy/graph-simple.yaml:application/yaml --disable-path-validation
+	oras push $(ACRNAME).azurecr.io:/graph-simple-filter:1.0.0 --config /dev/null:application/vnd.microsoft.aio.graph.v1+yaml ./deploy/graph-simple-filter.yaml:application/yaml --disable-path-validation
+	oras push $(ACRNAME).azurecr.io:/graph-simple-schema-validation:1.0.0 --config /dev/null:application/vnd.microsoft.aio.graph.v1+yaml ./deploy/graph-simple-schema-validation.yaml:application/yaml --disable-path-validation
 	oras push $(ACRNAME).azurecr.io/filter:1.0.0 --artifact-type application/vnd.module.wasm.content.layer.v1+wasm ./rust/filter/target/wasm32-wasip2/release/filter.wasm:application/wasm
+	oras push $(ACRNAME).azurecr.io/schema-validation:1.0.0 --artifact-type application/vnd.module.wasm.content.layer.v1+wasm ./rust/schema-validation/target/wasm32-wasip2/release/schema_validation.wasm:application/wasm
 
 deploy_dataflow_graph:
 	@echo "Deploying Dataflow Graph..."

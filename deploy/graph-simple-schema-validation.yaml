@@ -1,0 +1,32 @@
+metadata:
+  $schema: "https://www.schemastore.org/aio-wasm-graph-config-1.0.0.json"
+  name: "Simple schema-validation graph"
+  description: "A simple graph with a source, a filter module for schema-validation, and a sink"
+  version: "1.0.0"
+  vendor: "Microsoft"
+
+moduleRequirements:
+  apiVersion: "1.1.0"
+  runtimeVersion: "1.1.0"
+
+operations:
+  - operationType: "source"
+    name: "source"
+
+  - operationType: "filter"
+    name: "module-temperature/schema-validation"
+    module: "schema-validation:1.0.0"
+
+  - operationType: "sink"
+    name: "sink"
+
+connections:
+  - from:
+      name: "source"
+    to:
+      name: "module-temperature/schema-validation"
+
+  - from:
+      name: "module-temperature/schema-validation"
+    to:
+      name: "sink"

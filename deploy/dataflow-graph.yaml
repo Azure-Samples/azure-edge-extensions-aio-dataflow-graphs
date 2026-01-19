@@ -16,10 +16,16 @@ spec:
           - raw
 
     - nodeType: Graph
-      name: temperature-processor
+      name: temperature-schema-validation
       graphSettings:
         registryEndpointRef: registry-endpoint-acr
-        artifact: graph-simple:1.0.0
+        artifact: graph-simple-schema-validation:1.0.0
+
+    - nodeType: Graph
+      name: temperature-filter
+      graphSettings:
+        registryEndpointRef: registry-endpoint-acr
+        artifact: graph-simple-filter:1.0.0
         configuration:
         - key: temperature_lower_bound
           value: "2000"
@@ -36,9 +42,14 @@ spec:
     - from:
         name: temperature-source
       to:
-        name: temperature-processor
+        name: temperature-schema-validation
 
     - from:
-        name: temperature-processor
+        name: temperature-schema-validation
+      to:
+        name: temperature-filter    
+
+    - from:
+        name: temperature-filter
       to:
         name: temperature-destination

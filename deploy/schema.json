@@ -1,0 +1,26 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "name": "temperatureSchema",
+  "description": "A representation of an object",
+  "type": "object",
+  "properties": {
+    "temperature": {
+      "type": "object",
+      "properties": {
+        "value": {
+          "type": "number"
+        },
+        "unit": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "value",
+        "unit"
+      ]
+    }
+  },
+  "required": [
+    "temperature"
+  ]
+}
