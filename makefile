@@ -3,13 +3,14 @@ PORTFORWARDING := -p '8883:8883@loadbalancer' -p '1883:1883@loadbalancer'
 ARCCLUSTERNAME := arck-wasm-valmet-007# arc-wasm-dataflows
 STORAGEACCOUNTNAME := sawasmdataflows
 SCHEMAREGISTRYNAME := sr-wasm-dataflows
+SCHEMANAME := temperatureSchema
 DEVICEREGISTRYNAME := adr-wasm-dataflows
 ACRNAME := acrwasmvalmet007# acr-wasm-dataflows
 RESOURCEGROUP := rg-wasm-valmet-007# rg-wasm-dataflows
 AIOINSTANCE := iotops-arck-wasm-valmet-007
 LOCATION := westeurope
 
-all: create_k3d_cluster deploy_aio deploy_acr create_role_assignment deploy_registry_endpoint build_wasm_module push_wasm_module_to_acr deploy_dataflow_graph
+all: create_k3d_cluster deploy_aio deploy_acr create_role_assignment deploy_registry_endpoint build_wasm_module push_wasm_module_to_acr create_schema deploy_dataflow_graph
 
 create_k3d_cluster:
 	@echo "Creating k3d cluster..."
@@ -33,17 +34,28 @@ deploy_registry_endpoint:
 
 build_wasm_module:
 	@echo "Building WASM Module..."
-	cargo build --release --target wasm32-wasip2 --manifest-path ./rust/filter/Cargo.toml --config ./rust/filter/.cargo/config.toml
+	cargo build --release --target wasm32-wasip2 --manifest-path ./rust/filter/Cargo.toml --config ./rust/.cargo/config.toml
+	cargo build --release --target wasm32-wasip2 --manifest-path ./rust/schema-validation/Cargo.toml --config ./rust/.cargo/config.toml
 
 push_wasm_module_to_acr:
 	@echo "Pushing WASM Module to ACR..."
 	az acr login --name $(ACRNAME)
-	oras push $(ACRNAME).azurecr.io:/graph-simple:1.0.0 --config /dev/null:application/vnd.microsoft.aio.graph.v1+yaml ./deploy/graph-simple.yaml:application/yaml --disable-path-validation
+	oras push $(ACRNAME).azurecr.io:/graph-simple-filter:1.0.0 --config /dev/null:application/vnd.microsoft.aio.graph.v1+yaml ./deploy/graph-simple-filter.yaml:application/yaml --disable-path-validation
+	oras push $(ACRNAME).azurecr.io:/graph-simple-schema-validation:1.0.0 --config /dev/null:application/vnd.microsoft.aio.graph.v1+yaml ./deploy/graph-simple-schema-validation.yaml:application/yaml --disable-path-validation
 	oras push $(ACRNAME).azurecr.io/filter:1.0.0 --artifact-type application/vnd.module.wasm.content.layer.v1+wasm ./rust/filter/target/wasm32-wasip2/release/filter.wasm:application/wasm
+	oras push $(ACRNAME).azurecr.io/schema-validation:1.0.0 --artifact-type application/vnd.module.wasm.content.layer.v1+wasm ./rust/schema-validation/target/wasm32-wasip2/release/schema_validation.wasm:application/wasm
+
+create_schema:
+	@echo "Creating JSON Schema in Schema Registry..."
+	az iot ops schema create -n $(SCHEMANAME) -g $(RESOURCEGROUP) --registry $(SCHEMAREGISTRYNAME) --format json --type message --version-content myschema.json
 
 deploy_dataflow_graph:
 	@echo "Deploying Dataflow Graph..."
-	kubectl apply -f ./deploy/dataflow-graph.yaml
+	cp ./deploy/dataflow-graph-template.yaml ./deploy/dataflow-graph-temp.yaml
+	# on a mac (sed -i '' "s?__{schema_ref}__?$(SCHEMAREGISTRYNAME)/$(SCHEMANAME)?g" ./deploy/dataflow-graph-temp.yaml)
+	sed -i "s?__{schema_ref}__?$(SCHEMAREGISTRYNAME)/$(SCHEMANAME)?g" ./deploy/dataflow-graph-temp.yaml
+	kubectl apply -f ./deploy/dataflow-graph-temp.yaml
+	rm -f ./deploy/dataflow-graph-temp.yaml
 
 clean:
 	@echo "Cleaning up..."

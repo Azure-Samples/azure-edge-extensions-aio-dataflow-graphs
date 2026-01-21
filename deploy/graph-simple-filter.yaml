@@ -1,6 +1,6 @@
 metadata:
   $schema: "https://www.schemastore.org/aio-wasm-graph-config-1.0.0.json"
-  name: "Simple graph"
+  name: "Simple filter graph"
   description: "A simple graph with a source, a filter module, and a sink"
   version: "1.0.0"
   vendor: "Microsoft"
