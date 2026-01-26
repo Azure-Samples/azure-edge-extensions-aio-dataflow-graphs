@@ -1,6 +1,8 @@
 {
     "rust-analyzer.linkedProjects": [
         "rust/filter/Cargo.toml",
-        "rust/schema-validation/Cargo.toml"
+        "rust/schema-validation/Cargo.toml",
+        "rust/map/Cargo.toml",
+        "rust/custom/Cargo.toml"
     ]
 }

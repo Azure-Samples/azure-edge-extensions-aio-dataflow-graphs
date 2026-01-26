@@ -22,6 +22,12 @@ spec:
         artifact: graph-simple-schema-validation:1.0.0
 
     - nodeType: Graph
+      name: temperature-map-custom
+      graphSettings:
+        registryEndpointRef: registry-endpoint-acr
+        artifact: graph-simple-map-custom:1.0.0
+
+    - nodeType: Graph
       name: temperature-filter
       graphSettings:
         registryEndpointRef: registry-endpoint-acr
@@ -50,7 +56,12 @@ spec:
     - from:
         name: temperature-schema-validation
       to:
-        name: temperature-filter    
+        name: temperature-map-custom
+
+    - from:
+        name: temperature-map-custom
+      to:
+        name: temperature-filter
 
     - from:
         name: temperature-filter

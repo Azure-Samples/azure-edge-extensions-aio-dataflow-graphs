@@ -9,13 +9,13 @@ export LOCATION=$5
 export DEVICE_REGISTRY_NAME=$6
 export ACR_NAME=$7
 
-# # register providers
-# az provider register -n "Microsoft.ExtendedLocation"
-# az provider register -n "Microsoft.Kubernetes"
-# az provider register -n "Microsoft.KubernetesConfiguration"
-# az provider register -n "Microsoft.IoTOperations"
-# az provider register -n "Microsoft.DeviceRegistry"
-# az provider register -n "Microsoft.SecretSyncController"
+# register providers
+az provider register -n "Microsoft.ExtendedLocation"
+az provider register -n "Microsoft.Kubernetes"
+az provider register -n "Microsoft.KubernetesConfiguration"
+az provider register -n "Microsoft.IoTOperations"
+az provider register -n "Microsoft.DeviceRegistry"
+az provider register -n "Microsoft.SecretSyncController"
 
 # install CLI extensions
 echo "Installing CLI extensions..."
