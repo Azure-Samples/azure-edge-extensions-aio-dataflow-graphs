@@ -47,9 +47,9 @@ build_wasm_module:
 push_wasm_module_to_acr:
 	@echo "Pushing WASM Module to ACR..."
 	az acr login --name $(ACRNAME)
-	oras push $(ACRNAME).azurecr.io:/graph-simple-filter:1.0.0 --config /dev/null:application/vnd.microsoft.aio.graph.v1+yaml ./deploy/graph-simple-filter.yaml:application/yaml --disable-path-validation
-	oras push $(ACRNAME).azurecr.io:/graph-simple-schema-validation:1.0.0 --config /dev/null:application/vnd.microsoft.aio.graph.v1+yaml ./deploy/graph-simple-schema-validation.yaml:application/yaml --disable-path-validation
-	oras push $(ACRNAME).azurecr.io:/graph-simple-map-custom:1.0.0 --config /dev/null:application/vnd.microsoft.aio.graph.v1+yaml ./deploy/graph-simple-map-custom.yaml:application/yaml --disable-path-validation
+	oras push $(ACRNAME).azurecr.io/graph-simple-filter:1.0.0 --config /dev/null:application/vnd.microsoft.aio.graph.v1+yaml ./deploy/graph-simple-filter.yaml:application/yaml --disable-path-validation
+	oras push $(ACRNAME).azurecr.io/graph-simple-schema-validation:1.0.0 --config /dev/null:application/vnd.microsoft.aio.graph.v1+yaml ./deploy/graph-simple-schema-validation.yaml:application/yaml --disable-path-validation
+	oras push $(ACRNAME).azurecr.io/graph-simple-map-custom:1.0.0 --config /dev/null:application/vnd.microsoft.aio.graph.v1+yaml ./deploy/graph-simple-map-custom.yaml:application/yaml --disable-path-validation
 	oras push $(ACRNAME).azurecr.io/filter:1.0.0 --artifact-type application/vnd.module.wasm.content.layer.v1+wasm ./rust/filter/target/wasm32-wasip2/release/filter.wasm:application/wasm
 	oras push $(ACRNAME).azurecr.io/schema-validation:1.0.0 --artifact-type application/vnd.module.wasm.content.layer.v1+wasm ./rust/schema-validation/target/wasm32-wasip2/release/schema_validation.wasm:application/wasm
 	oras push $(ACRNAME).azurecr.io/map-custom:1.0.0 --artifact-type application/vnd.module.wasm.content.layer.v1+wasm ./rust/map/target/wasm32-wasip2/release/composed_map_custom.wasm:application/wasm
