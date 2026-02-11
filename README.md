@@ -6,9 +6,9 @@ This repository demonstrates how to build and deploy custom WebAssembly (WASM) m
 
 Azure IoT Operations data flow graphs support WebAssembly modules for custom data processing at the edge. You can deploy custom business logic and data transformations as part of your data flow pipelines. This project includes:
 
-- **Custom WASM modules** written in Rust
+- **Custom WASM modules** written in Rust (filter, map, schema validation, and custom processing)
 - **Deployment configurations** for Azure IoT Operations
-- **Sample data flow graphs** demonstrating temperature filtering and processing
+- **Sample data flow graphs** demonstrating temperature filtering, mapping, schema validation, and custom transformations
 
 ## Prerequisites
 
@@ -23,10 +23,26 @@ Azure IoT Operations data flow graphs support WebAssembly modules for custom dat
 ```text
 .
 ├── rust/
-│   └── filter/          # Custom WASM filter module
-│       ├── Cargo.toml   # Rust dependencies
+│   ├── filter/              # Temperature filter module
+│   │   ├── Cargo.toml       # Rust dependencies
+│   │   └── src/
+│   │       └── lib.rs       # Filter implementation (temperature bounds)
+│   ├── map/                 # Data transformation module
+│   │   ├── Cargo.toml
+│   │   ├── wit/
+│   │   │   └── custom.wit   # WIT interface definition
+│   │   └── src/
+│   │       └── lib.rs       # Map implementation with custom WIT
+│   ├── custom/              # Custom processing provider
+│   │   ├── Cargo.toml
+│   │   ├── wit/
+│   │   │   └── custom.wit   # WIT interface definition
+│   │   └── src/
+│   │       └── lib.rs       # Custom provider with logging
+│   └── schema-validation/   # Schema validation module
+│       ├── Cargo.toml
 │       └── src/
-│           └── lib.rs   # Filter implementation
+│           └── lib.rs       # Schema validation implementation
 ├── deploy/
 │   ├── acr-push.sh                  # Script to push WASM to ACR
 │   ├── create-role-assignment.sh    # Script to configure ACR permissions
@@ -59,24 +75,24 @@ The makefile handles all the complexity of targeting the correct WebAssembly arc
 
 ### 1. Build WASM Modules
 
-Build the custom filter module:
+Build all WASM modules (filter, map, custom, schema-validation):
 
 ```bash
 make build_wasm_module
 ```
 
-This compiles the Rust code to WebAssembly Component Model format in the `rust/filter/target/wasm32-wasip2/release/` directory.
+This compiles the Rust code to WebAssembly Component Model format in each module's `target/wasm32-wasip2/release/` directory.
 
 ### 2. Push to Azure Container Registry
 
-Set your ACR name and push the WASM module:
+Set your ACR name and push all WASM modules:
 
 ```bash
 export ACR_NAME=<YOUR_ACR_NAME>
 make push_wasm_module_to_acr
 ```
 
-This uses the ORAS CLI to push the compiled WASM module to your container registry.
+This uses the ORAS CLI to push all compiled WASM modules to your container registry.
 
 ### 3. Configure Registry Endpoint
 
@@ -140,12 +156,43 @@ The WASM data flow implementation follows this workflow:
 5. **Create data flow**: Define data sources, artifact references, and destinations
 6. **Deploy and execute**: Azure IoT Operations pulls WASM modules and runs them based on graph definition
 
-## Example: Filter Module
+## Example Modules
 
-The included filter module demonstrates a basic data processing pattern:
+### Filter Module
+
+Filters temperature measurements based on configurable upper and lower bounds. Demonstrates:
+- Configuration via properties (temperature_lower_bound, temperature_upper_bound)
+- JSON deserialization of temperature measurements
+- Logging and metrics integration
+- Pattern matching on `DataModel::Message` and `DataModel::BufferOrBytes`
+
+### Map Module
+
+Transforms data payloads using a custom WIT (WebAssembly Interface Type) interface. Demonstrates:
+- WIT-based component composition
+- Importing custom processing functions
+- Preserving message metadata during transformation
+- Converting between SDK and custom data models
+
+### Custom Module
+
+Provides a custom processing implementation that can be imported by other modules. Demonstrates:
+- Exporting WIT interfaces for reuse
+- Logging within custom providers
+- Configuration property handling
+- Pass-through processing pattern
+
+### Schema Validation Module
+
+Validates incoming messages against JSON schemas. Demonstrates:
+- Schema caching and validation
+- Working with message properties
+- Error handling and reporting
+
+**Example Graph Definition:**
 
 ```yaml
-# Graph definition (graph-simple.yaml)
+# Graph definition showing chained processing
 nodes:
   - nodeType: Source
     name: sensor-source
@@ -155,16 +202,26 @@ nodes:
         - sensor/temperature/raw
 
   - nodeType: Graph
+    name: map-processor
+    graphSettings:
+      registryEndpointRef: my-acr-endpoint
+      artifact: map-custom:1.0.0
+
+  - nodeType: Graph
     name: filter-processor
     graphSettings:
       registryEndpointRef: my-acr-endpoint
       artifact: filter:1.0.0
+      configuration:
+        properties:
+          temperature_lower_bound: "20"
+          temperature_upper_bound: "3500"
 
   - nodeType: Destination
     name: sensor-destination
     destinationSettings:
       endpointRef: default
-      dataDestination: sensor/temperature/filtered
+      dataDestination: sensor/temperature/processed
 ```
 
 ## Testing

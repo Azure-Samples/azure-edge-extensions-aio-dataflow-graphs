@@ -217,6 +217,14 @@ mod filter_temperature {
                 logger::log(Level::Info, "module-temperature/filter", "Received Bytes type");
                 bytes
             },
+            DataModel::BufferOrBytes(BufferOrBytes::Buffer(buffer)) => {
+                logger::log(Level::Info, "module-temperature/filter", "Received BufferOrBytes::Buffer type");
+                buffer.read()
+            },
+            DataModel::BufferOrBytes(BufferOrBytes::Bytes(bytes)) => {
+                logger::log(Level::Info, "module-temperature/filter", "Received BufferOrBytes::Bytes type");
+                bytes
+            },
             ref other => {
                 logger::log(
                     Level::Error,
